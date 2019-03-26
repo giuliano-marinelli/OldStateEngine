@@ -1,0 +1,184 @@
+*{
+    position: relative;
+    color: #333;
+}
+
+body{
+    background-color: #dadada;
+    text-align: center;
+}
+
+input{
+    padding: 5px 15px;
+}
+
+#scene{
+    position: relative;
+    top:0px;
+    width: 880px;
+    height: 880px;
+    margin: auto;
+}
+
+#match{
+    position: fixed;
+    left:20px;
+    top: 50%;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+    /*max-width: 180px;*/
+    width: auto;
+    height: auto;
+    padding: 10px;
+    border: 1px solid gray;
+    background-color: white;
+}
+
+#players{
+    max-width: 180px;
+}
+
+#controller{
+    position: relative;
+    margin: 15px;
+}
+
+#map{
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: -1;
+    display: block;
+}
+
+#terrain{
+    position: relative;
+    top: 0px;
+    left: 0px;
+    z-index: 0;
+    display: block;
+    /*visibility: hidden*/
+}
+
+#entities{
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 1;
+}
+
+.cell{
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    border: 1px solid gray;
+}
+
+.wall0{
+    background: black;
+}
+
+.wall1{
+    background: antiquewhite;
+}
+
+.spawn{
+    /*background: yellow;*/
+    background-image: url('images/spawn.gif');
+    background-repeat: no-repeat;
+    background-size: 20px 20px;
+    border: 1px solid rgba(0,0,0,0);
+    pointer-events: none;
+}
+
+.name{
+    z-index: 3;
+    position: relative;
+    top:-15px;
+    width:12px;
+    left:-2px;
+    height:2px;
+    color: white;
+    font-size: 15px;
+    pointer-events: none;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -ms-user-select:none;
+}
+
+.healthbar{
+    z-index: 3;
+    position: relative;
+    top:-4px;
+    width:12px;
+    left:-2px;
+    height:2px;
+    background-color: green;
+    border: 1px solid aquamarine;
+    border-radius: 1px;
+    pointer-events: none;
+}
+
+.player{
+    z-index: 2;
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    background-image: url('images/brujo.png');
+    background-repeat: no-repeat;
+    background-size: 20px 20px;
+    background-color: black;
+    border-radius: 10px;
+    pointer-events: none;
+}
+
+.arrowteam{
+    z-index: 4;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    /*background-blend-mode: multiply;*/
+    opacity:0.5;
+    border-radius: 10px;
+}
+
+.arrow{
+    z-index: 3;
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    background-image: url('images/fireball.png');
+    background-repeat: no-repeat;
+    background-size: 10px 10px;
+    border-radius: 10px;
+    pointer-events: none;
+}
+
+.tower{
+    z-index: 4;
+    width: 60px;
+    height: 140px;
+    margin-top: -20px;
+    position: absolute;
+    background-image: url('images/mapa_2018/torre_puerta_adelante.png');
+    background-repeat: no-repeat;
+    background-size: 60px 140px;
+    background-color: transparent;
+    /*box-shadow:  0px 0px 2px 2px black;*/
+    /*border-radius: 20px;*/
+    pointer-events: none;
+}
+
+.team {
+    color: black;
+}
+
+.team0{
+    color: red;
+}
+
+.team1{
+    color: blue;
+}
