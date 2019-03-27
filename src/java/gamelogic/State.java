@@ -78,6 +78,10 @@ public abstract class State {
         jsonState.put("State", jsonAttrs);
         return jsonState;
     }
+    
+    public JSONObject toJSON(String sessionId) {
+        return toJSON();
+    }
 
     @Override
     protected Object clone() {

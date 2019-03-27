@@ -21,17 +21,17 @@ public class ServerSender implements Runnable {
             //envia la identidad con la que se representara en el juego
             session.getAsyncRemote().sendText("{\"id\":\"" + session.getId() + "\"}");
             //envia estados estaticos por unica vez
-            String staticStates = lobby.getStaticState();
-            session.getAsyncRemote().sendText(staticStates);
-            System.out.println("Send statics states to player " + session.getId());
+            //String staticStates = lobby.getStaticState();
+            //session.getAsyncRemote().sendText(staticStates);
+            //System.out.println("Send statics states to player " + session.getId());
             //envia todos los estados dinamicos por unica vez
-            String fullStates = lobby.getFullState();
-            session.getAsyncRemote().sendText(fullStates);
-            System.out.println("Send full states to player " + session.getId());
+            //String fullStates = lobby.getFullState();
+            //session.getAsyncRemote().sendText(fullStates);
+            //System.out.println("Send full states to player " + session.getId());
             //repite hasta que el juego termina
             while (!lobby.isEndGame() && session.isOpen()) {
                 //envia los estados que cambiaron en cada ciclo del juego
-                String states = lobby.getState();
+                String states = lobby.getState(session.getId());
                 if (session.isOpen()) {
                     session.getAsyncRemote().sendText(states);
                     //System.out.println("Send state changes to player " + session.getId());

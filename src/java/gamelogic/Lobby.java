@@ -5,13 +5,10 @@ import java.util.HashMap;
 public class Lobby {
 
     private Game game;
-    private int playerIndex = 1;
-    private HashMap<String, Boolean> readed;
 
     private static Lobby lobby;
 
     private Lobby() {
-        readed = new HashMap<>();
         game = new Game(this);
         Thread threadGame = new Thread(game);
         threadGame.start();
@@ -27,10 +24,13 @@ public class Lobby {
     public synchronized void addAction(String sessionId, String action) {
         game.addAction(sessionId, action);
     }
-
+    
     public synchronized void addPlayer(String sessionId) {
-        game.getPlayersSended().put(sessionId, playerIndex + "");
-        playerIndex++;
+        game.addPlayer(sessionId);
+    }
+    
+    public synchronized void removePlayer(String sessionId) {
+        game.removePlayer(sessionId);
     }
 
     public synchronized void stateReady() {
@@ -40,6 +40,11 @@ public class Lobby {
     public synchronized String getState() throws InterruptedException {
         wait();
         return game.getGameState();
+    }
+    
+    public synchronized String getState(String sessionId) throws InterruptedException {
+        wait();
+        return game.getGameState(sessionId);
     }
 
     public synchronized String getFullState() throws InterruptedException {

@@ -9,7 +9,10 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Phaser;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.simple.JSONArray;
@@ -22,12 +25,12 @@ public class Game implements Runnable {
     private LinkedList<StaticState> staticStates;
     private HashMap<String, Action> actions;
     private ConcurrentHashMap<String, String> actionsSended; //sessionid -> accion
-    private HashMap<String, Player> players;
-    private ConcurrentHashMap<String, String> playersSended; //sessionid -> accion
+    private HashMap<String, GameView> gameViews;
+    private ConcurrentHashMap<String, String> gameViewsSended; //sessionid -> [enter, leave]
+    private Phaser viewsBarrier;
     private String gameState;
     private String gameFullState;
     private String gameStaticState;
-    private boolean canRead;
     private boolean endGame;
 
     private Lobby lobby;
@@ -38,8 +41,9 @@ public class Game implements Runnable {
         staticStates = new LinkedList<>();
         actions = new HashMap<>();
         actionsSended = new ConcurrentHashMap();
-        players = new HashMap<>();
-        playersSended = new ConcurrentHashMap<>();
+        gameViews = new HashMap<>();
+        gameViewsSended = new ConcurrentHashMap<>();
+        viewsBarrier = new Phaser(1);
         endGame = false;
         this.lobby = lobby;
     }
@@ -76,6 +80,14 @@ public class Game implements Runnable {
                     states.get(i).clearEvents();
                 }
                 createState();
+                //recorre los player que entran o salen del juego para agregarlos
+                //o quitarlos de la lista de gameViews
+                readPlayers();
+                //despierta a los hilos para que generen el JSON con el estado
+                //correspondiente a la visibilidad de cada jugador
+                viewsBarrier.arriveAndAwaitAdvance();
+                //barrera hasta que todos los hilos terminan de computar el estado
+                viewsBarrier.arriveAndAwaitAdvance();
                 lobby.stateReady();
                 int i = 0;
                 while (i < states.size()) {
@@ -106,79 +118,6 @@ public class Game implements Runnable {
         } catch (URISyntaxException ex) {
             Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-
-    public void readActions() {
-        actions.clear();
-        JSONParser parser = new JSONParser();
-        for (Map.Entry<String, String> actionSend : actionsSended.entrySet()) {
-            String sessionId = actionSend.getKey();
-            String action = actionSend.getValue();
-            Action newAction = null;
-            try {
-                JSONObject jsonAction = (JSONObject) parser.parse(action);
-                String actionName = (String) jsonAction.get("name");
-                newAction = new Action(sessionId, actionName);
-
-                JSONArray jsonParameters = (JSONArray) jsonAction.get("parameters");
-                if (jsonParameters != null) {
-                    for (int i = 0; i < jsonParameters.size(); i++) {
-                        JSONObject parameter = (JSONObject) jsonParameters.get(i);
-                        newAction.putParameter((String) parameter.get("name"), (String) parameter.get("value"));
-                    }
-                }
-            } catch (Exception ex) {
-                newAction = new Action(sessionId, action);
-            } finally {
-                System.out.println("Player " + sessionId + " do action: " + newAction.getName());
-                actions.put(sessionId, newAction);
-                actionsSended.remove(sessionId);
-            }
-        }
-    }
-
-    public void readPlayers() {
-        /*for (Map.Entry<String, String> playerSended : playersSended.entrySet()) {
-            String sessionId = playerSended.getKey();
-            //String player = playerSended.getValue();
-            if (!players.containsKey(sessionId)) {
-                players.put(sessionId, player);
-            }
-        }
-        for (Map.Entry<String, Player> player : players.entrySet()) {
-            String sessionId = player.getKey();
-            Player playerState = player.getValue();
-            if (!playersSended.containsKey(sessionId)) {
-                playerState.setLeave(true);
-            }
-        }*/
-    }
-
-    private void createStaticState() {
-        JSONObject jsonStaticStates = new JSONObject();
-        int i = 0;
-        for (StaticState staticState : staticStates) {
-            jsonStaticStates.put(i + "", staticState.toJSON());
-            i++;
-        }
-        gameStaticState = jsonStaticStates.toString();
-    }
-
-    private void createState() {
-        JSONObject jsonFullStates = new JSONObject();
-        JSONObject jsonStates = new JSONObject();
-        int i = 0;
-        int j = 0;
-        for (State state : states) {
-            jsonFullStates.put(i + "", state.toJSON());
-            if (state.hasChanged()) {
-                jsonStates.put(j + "", state.toJSON());
-                j++;
-            }
-            i++;
-        }
-        gameFullState = jsonFullStates.toString();
-        gameState = jsonStates.toString();
     }
 
     private void loadMap(File fileMap) {
@@ -217,6 +156,62 @@ public class Game implements Runnable {
         staticStates.add(new Spawn(29, 20, "SpawnTower"));
     }
 
+    private void createStaticState() {
+        JSONObject jsonStaticStates = new JSONObject();
+        int i = 0;
+        for (StaticState staticState : staticStates) {
+            jsonStaticStates.put(i + "", staticState.toJSON());
+            i++;
+        }
+        gameStaticState = jsonStaticStates.toString();
+    }
+
+    private void createState() {
+        JSONObject jsonFullStates = new JSONObject();
+        JSONObject jsonStates = new JSONObject();
+        int i = 0;
+        int j = 0;
+        for (State state : states) {
+            jsonFullStates.put(i + "", state.toJSON());
+            if (state.hasChanged()) {
+                jsonStates.put(j + "", state.toJSON());
+                j++;
+            }
+            i++;
+        }
+        gameFullState = jsonFullStates.toString();
+        gameState = jsonStates.toString();
+    }
+
+    public void readActions() {
+        actions.clear();
+        JSONParser parser = new JSONParser();
+        for (Map.Entry<String, String> actionSend : actionsSended.entrySet()) {
+            String sessionId = actionSend.getKey();
+            String action = actionSend.getValue();
+            Action newAction = null;
+            try {
+                JSONObject jsonAction = (JSONObject) parser.parse(action);
+                String actionName = (String) jsonAction.get("name");
+                newAction = new Action(sessionId, actionName);
+
+                JSONArray jsonParameters = (JSONArray) jsonAction.get("parameters");
+                if (jsonParameters != null) {
+                    for (int i = 0; i < jsonParameters.size(); i++) {
+                        JSONObject parameter = (JSONObject) jsonParameters.get(i);
+                        newAction.putParameter((String) parameter.get("name"), (String) parameter.get("value"));
+                    }
+                }
+            } catch (Exception ex) {
+                newAction = new Action(sessionId, action);
+            } finally {
+                System.out.println("Player " + sessionId + " do action: " + newAction.getName());
+                actions.put(sessionId, newAction);
+                actionsSended.remove(sessionId);
+            }
+        }
+    }
+
     public void addAction(String sessionId, String action) {
         //Player player = players.get(sessionId);
         //if (players.containsKey(sessionId)) {
@@ -250,6 +245,43 @@ public class Game implements Runnable {
         //}
     }
 
+    public void readPlayers() {
+        if (gameViewsSended.size() > 0) {
+            for (Map.Entry<String, String> gameViewSended : gameViewsSended.entrySet()) {
+                String sessionId = gameViewSended.getKey();
+                String action = gameViewSended.getValue();
+                if (action == "enter") {
+                    //aumento en uno los miembros de la barrera
+                    //(tal ves hay que hacerlo en el hilo del gameView)
+                    viewsBarrier.register();
+                    //creo el nuevo hilo
+                    GameView gameView = new GameView(sessionId, states, staticStates, viewsBarrier);
+                    Thread threadGameView = new Thread(gameView);
+                    threadGameView.start();
+                    //lo agrego a la lista de gridViews
+                    gameViews.put(sessionId, gameView);
+                } else if (action == "leave") {
+                    //disminuyo en uno los miembros de la barrera
+                    //(tal ves hay que hacerlo en el hilo del gameView)
+                    viewsBarrier.arriveAndDeregister();
+                    //mato el hilo seteando su variable de terminancion y realizando un notify
+                    gameViews.get(sessionId).stop();
+                    //lo elimino de la lista de gridViews
+                    gameViews.remove(sessionId);
+                }
+            }
+            gameViewsSended.clear();
+        }
+    }
+
+    public void addPlayer(String sessionId) {
+        gameViewsSended.put(sessionId, "enter");
+    }
+
+    public void removePlayer(String sessionId) {
+        gameViewsSended.put(sessionId, "leave");
+    }
+
     public boolean isEndGame() {
         return endGame;
     }
@@ -258,20 +290,12 @@ public class Game implements Runnable {
         endGame = true;
     }
 
-    public boolean canRead() {
-        return canRead;
-    }
-
-    public ConcurrentHashMap<String, String> getActionsSended() {
-        return actionsSended;
-    }
-
-    public ConcurrentHashMap<String, String> getPlayersSended() {
-        return playersSended;
-    }
-
     public String getGameState() {
         return gameState;
+    }
+
+    public String getGameState(String sessionId) {
+        return gameViews.get(sessionId).getGameState();
     }
 
     public String getGameFullState() {
