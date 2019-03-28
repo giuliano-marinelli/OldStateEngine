@@ -93,7 +93,7 @@ public abstract class State {
     }
 
     public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, JSONObject lastState) {
-        return hasChanged || lastState == null ? toJSON() : null;
+        return lastState == null || hasChanged ? toJSON() : null;
     }
 
     protected JSONObject toJSONRemover() {

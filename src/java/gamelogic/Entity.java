@@ -72,7 +72,8 @@ public class Entity extends State {
     @Override
     public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, JSONObject lastState) {
         Player thePlayer = getPlayer(sessionId, states);
-        return (thePlayer != null && Math.abs(thePlayer.getX() - x) < 10 && Math.abs(thePlayer.getY() - y) < 10) ? toJSON()
+        return (thePlayer != null && Math.abs(thePlayer.getX() - x) < 10 && Math.abs(thePlayer.getY() - y) < 10)
+                ? (lastState == null || hasChanged || isJSONRemover(lastState) ? toJSON() : null)
                 : (lastState != null && !isJSONRemover(lastState) ? toJSONRemover() : null);
     }
 
