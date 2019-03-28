@@ -26,7 +26,7 @@ function preload() {
 }
 
 function create() {
-    background = this.add.image(440, 440, 'mapa');
+    //background = this.add.image(440, 440, 'mapa');
 }
 
 function fire(x, y) {
@@ -38,7 +38,7 @@ window.onload = function () {
     page.href = window.location.href;
     //define la url del servidor como la hostname de la pagina y el puerto definido 8080 del ws
     var url = "ws://" + page.hostname + ":8080";
-    socket = new WebSocket(url + "/Edimbrujo/GameWebSocket");
+    socket = new WebSocket(url + "/StateEngine/GameWebSocket");
     socket.onmessage = stateUpdate;
 
     var map = document.getElementById("map");
@@ -56,6 +56,7 @@ window.onload = function () {
         //console.log(socket);
         //console.log(event.data);
         var gameState = JSON.parse(event.data);
+        console.log(gameState);
         //var game2State = event.data;
         if (typeof gameState !== "undefined") {
             //console.log(game2State);
@@ -66,8 +67,11 @@ window.onload = function () {
             var i = 0;
             while (typeof gameState[i] !== "undefined") {
                 //console.log(game2State[i]);
-                if (typeof gameState[i]["Map"] !== "undefined") {
-                    console.log(gameState[i]["Map"]);
+                if (typeof gameState[i]["Remove"] !== "undefined") {
+                    var id = gameState[i]["Remove"]["id"];
+                    $("#" + id).remove();
+                } else if (typeof gameState[i]["Map"] !== "undefined") {
+                    //console.log(gameState[i]["Map"]);
                     var width = gameState[i]["Map"]["width"];
                     var height = gameState[i]["Map"]["height"];
                     var j = 0;
@@ -84,7 +88,7 @@ window.onload = function () {
                             cell = document.getElementById("cell" + x + "_" + y);
                             cell.style.left = x * ($(".cell").width() + 2) + "px";
                             cell.style.top = y * ($(".cell").height() + 2) + "px";
-                            cell.style.visibility = "hidden";
+                            cell.style.visibility = "visible";
                         }
                         j++;
                     }
@@ -99,7 +103,8 @@ window.onload = function () {
                     //game2.style.height = height * ($(".cell").height() + 2) + "px";
                 } else if (typeof gameState[i]["Player"] !== "undefined") {
                     //console.log(gameState[i]["Player"]);
-                    var id = gameState[i]["Player"]["id"];
+                    var id = gameState[i]["Player"]["super"]["Entity"]["super"]["State"]["id"];
+                    var playerId = gameState[i]["Player"]["id"];
                     var destroy = gameState[i]["Player"]["super"]["Entity"]["super"]["State"]["destroy"];
                     var leave = gameState[i]["Player"]["leave"];
                     var dead = gameState[i]["Player"]["dead"];
@@ -108,17 +113,23 @@ window.onload = function () {
                     var x = gameState[i]["Player"]["super"]["Entity"]["x"];
                     var y = gameState[i]["Player"]["super"]["Entity"]["y"];
                     var team = gameState[i]["Player"]["team"];
-                    playerTeam[id] = team;
-                    var player = document.getElementById("player" + id);
+                    playerTeam[playerId] = team;
+                    var player = document.getElementById(id);
                     if (player === null) {
                         var name = id.substr(0, 4);
-                        entities.innerHTML += "<div id='player" + id + "' class='player'><div id='player" + id + "-healthbar' class='healthbar'><div id='player" + id + "-name' class='name'>" + name + "</div>";
-                        player = document.getElementById("player" + id);
+                        entities.innerHTML +=
+                                "<div id='" + id + "' class='player'>" +
+                                "<div id='" + id + "-healthbar' class='healthbar'></div>" +
+                                "<div id='" + id + "-name' class='name'>" + name + "</div>" +
+                                "<div id='" + id + "-visibility' class='visibility'></div>" +
+                                "</div>";
+                        player = document.getElementById(id);
                     }
                     player.style.left = x * ($(".cell").width() + 2) + 1 + "px";
                     player.style.top = y * ($(".cell").height() + 2) + 1 + "px";
-                    playerHealthbar = document.getElementById("player" + id + "-healthbar");
+                    playerHealthbar = document.getElementById(id + "-healthbar");
                     playerHealthbar.style.width = health * 24 / healthMax + "px";
+                    playerVisibility = document.getElementById(id + "-visibility");
                     if (dead) {
                         player.style.zIndex = "1";
                         player.style.backgroundImage = "url('images/blood.png')";
@@ -126,10 +137,11 @@ window.onload = function () {
                     } else {
                         player.style.zIndex = "2";
                         player.style.backgroundImage = "url('images/brujo.png')";
-                        if (id === socketID) {
+                        if (playerId === socketID) {
                             player.style.backgroundColor = "green";
                         } else {
                             player.style.backgroundColor = $(".team" + team).css("color");//"#" + ((1 << 24) * Math.random() | 0).toString(16);
+                            playerVisibility.style.visibility = "hidden";
                         }
                     }
                     if (leave) {
@@ -144,7 +156,8 @@ window.onload = function () {
                     //players.innerHTML += game2State[i]["Player"]["id"] + "," + game2State[i]["Player"]["x"] + "," + game2State[i]["Player"]["y"] + "<br>";
                 } else if (typeof gameState[i]["Projectile"] !== "undefined") {
                     //console.log(game2State[i]["Projectile"]);
-                    var id = gameState[i]["Projectile"]["id"];
+                    var id = gameState[i]["Projectile"]["super"]["Entity"]["super"]["State"]["id"];
+                    var playerId = gameState[i]["Projectile"]["id"];
                     var number = gameState[i]["Projectile"]["number"];
                     var destroy = gameState[i]["Projectile"]["super"]["Entity"]["super"]["State"]["destroy"];
                     var x = gameState[i]["Projectile"]["super"]["Entity"]["x"];
@@ -152,12 +165,15 @@ window.onload = function () {
                     var xVelocity = gameState[i]["Projectile"]["xVelocity"];
                     var yVelocity = gameState[i]["Projectile"]["yVelocity"];
                     var team = gameState[i]["Projectile"]["team"];
-                    var projectile = document.getElementById("projectile" + id + "-" + number);
+                    var projectile = document.getElementById(id);
                     if (projectile === null) {
-                        entities.innerHTML += "<div id='projectile" + id + "-" + number + "' class='arrow'><div id='projectileTeam" + id + "-" + number + "'class='arrowteam'></div></div>";
-                        projectile = document.getElementById("projectile" + id + "-" + number);
-                        var projectileTeam = document.getElementById("projectileTeam" + id + "-" + number);
-                        if (id === socketID) {
+                        entities.innerHTML +=
+                                "<div id='" + id + "' class='arrow'>" +
+                                "<div id='projectileTeam" + id + "' class='arrowteam'></div>" +
+                                "</div>";
+                        projectile = document.getElementById(id);
+                        var projectileTeam = document.getElementById("projectileTeam" + id);
+                        if (playerId === socketID) {
                             projectileTeam.style.backgroundColor = "green";
                         } else {
                             projectileTeam.style.backgroundColor = $(".team" + team).css("color");
@@ -167,12 +183,13 @@ window.onload = function () {
                     projectile.style.left = x * ($(".cell").width() + 2) + 1 + ($(".cell").width() + 2) / 2 - $(".arrow").width() / 2 + "px";
                     projectile.style.top = y * ($(".cell").height() + 2) + 1 + ($(".cell").height() + 2) / 2 - $(".arrow").height() / 2 + "px";
                     if (destroy) {
-                        $("#projectile" + id + "-" + number).remove();
+                        $("#" + id).remove();
                     }
                     //players.innerHTML += game2State[i]["Player"]["id"] + "," + game2State[i]["Player"]["x"] + "," + game2State[i]["Player"]["y"] + "<br>";
                 } else if (typeof gameState[i]["Tower"] !== "undefined") {
                     //console.log(gameState[i]["Tower"]);
-                    var id = gameState[i]["Tower"]["id"];
+                    var id = gameState[i]["Tower"]["super"]["Entity"]["super"]["State"]["id"];
+                    var playerId = gameState[i]["Tower"]["id"];
                     var destroy = gameState[i]["Tower"]["super"]["Entity"]["super"]["State"]["destroy"];
                     var dead = gameState[i]["Tower"]["dead"];
                     var team = gameState[i]["Tower"]["team"];
@@ -183,22 +200,25 @@ window.onload = function () {
                     var x = gameState[i]["Tower"]["super"]["Entity"]["x"];
                     var y = gameState[i]["Tower"]["super"]["Entity"]["y"];
                     var team = gameState[i]["Tower"]["team"];
-                    var tower = document.getElementById("tower" + id);
+                    var tower = document.getElementById(id);
                     if (tower === null) {
-                        entities.innerHTML += "<div id='tower" + id + "' class='tower'><div id='tower" + id + "-healthbar' class='healthbar'></div></div>";
-                        tower = document.getElementById("tower" + id);
+                        entities.innerHTML +=
+                                "<div id='" + id + "' class='tower'>" +
+                                "<div id='" + id + "-healthbar' class='healthbar'></div>" +
+                                "</div>";
+                        tower = document.getElementById(id);
                         //tower.style.backgroundColor = $(".team" + team).css("color");
                     }
                     tower.style.left = x * ($(".cell").width() + 2) + 1 - (Math.floor(width / 2) * $(".cell").width()) + "px";
                     tower.style.top = -60 + y * ($(".cell").height() + 2) + 1 - (Math.floor(height / 2) * $(".cell").width()) + "px";
-                    towerHealthbar = document.getElementById("tower" + id + "-healthbar");
+                    towerHealthbar = document.getElementById(id + "-healthbar");
                     towerHealthbar.style.width = health * width * 24 / healthMax + "px";
                     towerHealthbar.style.left = -8 + "px";
                     if (dead) {
                         //tower.style.zIndex = "1";
                         //tower.style.removeProperty('backgroundImage');
                         tower.style.backgroundImage = "url('images/mapa_2018/torre_rota.png')";
-                        tower.style.backgroundSize ="100% 50%";
+                        tower.style.backgroundSize = "100% 50%";
                         tower.style.marginTop = "45px";
                         //tower.style.backgroundSize ="100% 50%";
                         //tower.style.marginTop = "45px";
@@ -268,7 +288,7 @@ window.onload = function () {
     ready.addEventListener("click", function () {
         socket.send("ready");
     });
-    
+
     restart.addEventListener("click", function () {
         socket.send("restart");
     });

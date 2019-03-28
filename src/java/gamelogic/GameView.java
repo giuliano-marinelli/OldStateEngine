@@ -1,5 +1,6 @@
 package gamelogic;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
@@ -12,9 +13,10 @@ public class GameView implements Runnable {
 
     private String sessionId;
     private String gameState;
-    //private LinkedList<JSONObject> jsonStates;
     private LinkedList<State> states;
     private LinkedList<StaticState> staticStates;
+    private HashMap<State, JSONObject> statesSended;
+    private HashMap<State, JSONObject> staticStatesSended;
     private Phaser viewsBarrier;
     private boolean playerExit = false;
 
@@ -22,6 +24,8 @@ public class GameView implements Runnable {
         this.sessionId = sessionId;
         this.states = states;
         this.staticStates = staticStates;
+        this.statesSended = new HashMap<>();
+        this.staticStatesSended = new HashMap<>();
         this.viewsBarrier = viewsBarrier;
         this.playerExit = false;
     }
@@ -39,13 +43,27 @@ public class GameView implements Runnable {
 
     private void createState() {
         JSONObject jsonStates = new JSONObject();
+        JSONObject jsonState;
         int i = 0;
+        for (StaticState staticState : staticStates) {
+            //generar el estado estatico para la visibilidad del jugador
+            jsonState = staticState.toJSON(sessionId, states, staticStates, staticStatesSended.get(staticState));
+            if (jsonState != null) {
+                staticStatesSended.put(staticState, jsonState);
+                jsonStates.put(i + "", jsonState);
+                i++;
+            }
+        }
         for (State state : states) {
             //generar el estado para la visibilidad del jugador
-            jsonStates.put(i + "", state.toJSON(sessionId));
-            i++;
+            jsonState = state.toJSON(sessionId, states, staticStates, statesSended.get(state));
+            if (jsonState != null) {
+                statesSended.put(state, jsonState);
+                jsonStates.put(i + "", jsonState);
+                i++;
+            }
         }
-        gameState = jsonStates.toString();
+        gameState = !jsonStates.isEmpty() ? jsonStates.toString() : null;
     }
 
     public String getGameState() {

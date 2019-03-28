@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.UUID;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -21,8 +22,9 @@ public class Match extends State {
     protected LinkedList<String> ready;
     protected LinkedList<Integer> teamPoints;
 
-    public Match(int round, int countRounds, boolean endGame, boolean endRound, boolean startGame, int teamAttacker, int sizeTeam, LinkedList<String> players, LinkedList<String> playingPlayers, LinkedList<String> ready, LinkedList<Integer> teamPoints, String name, boolean destroy) {
-        super(name, destroy);
+    public Match(int round, int countRounds, boolean endGame, boolean endRound, boolean startGame, int teamAttacker, int sizeTeam, LinkedList<String> players, LinkedList<String> playingPlayers, LinkedList<String> ready, LinkedList<Integer> teamPoints,
+            String name, boolean destroy, String id) {
+        super(name, destroy, id == null ? UUID.randomUUID().toString() : id);
         this.round = round;
         this.countRounds = countRounds;
         this.endGame = endGame;
@@ -83,12 +85,12 @@ public class Match extends State {
             if (maxCant < sizeTeam * 2) {
                 Player newPlayer;
                 if (attack) {
-                    newPlayer = new Player(player, 0, false, false, teamAttacker, 1, 100, 100, spawnsAttack.get(i).x, spawnsAttack.get(i).y, "Player", false);
+                    newPlayer = new Player(player, 0, false, false, teamAttacker, 1, 100, 100, spawnsAttack.get(i).x, spawnsAttack.get(i).y, "Player", false, null);
                     newStates.add(newPlayer);
                     newPlayer.addEvent("spawn");
                     i++;
                 } else {
-                    newPlayer = new Player(player, 0, false, false, 1 - teamAttacker, 0, 100, 100, spawnsDefence.get(j).x, spawnsDefence.get(j).y, "Player", false);
+                    newPlayer = new Player(player, 0, false, false, 1 - teamAttacker, 0, 100, 100, spawnsDefence.get(j).x, spawnsDefence.get(j).y, "Player", false, null);
                     newStates.add(newPlayer);
                     newPlayer.addEvent("spawn");
                     j++;
@@ -98,13 +100,13 @@ public class Match extends State {
             }
         }
         //spawnea a las torres en las posiciones de spawn
-        Tower towerMain = new Tower("towerMain", 0, false, 1 - teamAttacker, 400, 400, 3, 3, spawnsTower.get(0).x, spawnsTower.get(0).y, "Tower", false);
+        Tower towerMain = new Tower("towerMain", 0, false, 1 - teamAttacker, 400, 400, 3, 3, spawnsTower.get(0).x, spawnsTower.get(0).y, "Tower", false, null);
         newStates.add(towerMain);
         towerMain.addEvent("spawn");
-        Tower towerLeft = new Tower("towerLeft", 0, false, 1 - teamAttacker, 200, 200, 3, 3, spawnsTower.get(1).x, spawnsTower.get(1).y, "Tower", false);
+        Tower towerLeft = new Tower("towerLeft", 0, false, 1 - teamAttacker, 200, 200, 3, 3, spawnsTower.get(1).x, spawnsTower.get(1).y, "Tower", false, null);
         newStates.add(towerLeft);
         towerLeft.addEvent("spawn");
-        Tower towerRight = new Tower("towerRight", 0, false, 1 - teamAttacker, 200, 200, 3, 3, spawnsTower.get(2).x, spawnsTower.get(2).y, "Tower", false);
+        Tower towerRight = new Tower("towerRight", 0, false, 1 - teamAttacker, 200, 200, 3, 3, spawnsTower.get(2).x, spawnsTower.get(2).y, "Tower", false, null);
         newStates.add(towerRight);
         towerRight.addEvent("spawn");
     }
@@ -266,8 +268,8 @@ public class Match extends State {
                         for (State state : states) {
                             if (state.getName().equals("Player")) {
                                 Player player = (Player) state;
-                                playersStates.add(player.id);
-                                newPlayingPlayers.add(player.id);
+                                playersStates.add(player.playerId);
+                                newPlayingPlayers.add(player.playerId);
                             }
                         }
                         //aca les quita el ready a aquellos que quedaron afuera
@@ -320,7 +322,7 @@ public class Match extends State {
             newEndRound = false;
             newRound = 1;
         }
-        Match newMatch = new Match(newRound, countRounds, newEndGame, newEndRound, newStartGame, newTeamAttacker, sizeTeam, newPlayers, newPlayingPlayers, newReady, newTeamPoints, name, destroy);
+        Match newMatch = new Match(newRound, countRounds, newEndGame, newEndRound, newStartGame, newTeamAttacker, sizeTeam, newPlayers, newPlayingPlayers, newReady, newTeamPoints, name, destroy, id);
         return newMatch;
     }
 
@@ -342,7 +344,7 @@ public class Match extends State {
 
     @Override
     protected Object clone() {
-        Match clon = new Match(round, countRounds, endGame, endRound, startGame, teamAttacker, sizeTeam, players, playingPlayers, ready, teamPoints, name, destroy);
+        Match clon = new Match(round, countRounds, endGame, endRound, startGame, teamAttacker, sizeTeam, players, playingPlayers, ready, teamPoints, name, destroy, id);
         return clon;
     }
 

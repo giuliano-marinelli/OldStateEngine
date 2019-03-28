@@ -2,11 +2,13 @@ package gamelogic;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.UUID;
+import org.json.simple.JSONObject;
 
 public abstract class StaticState extends State {
 
-    public StaticState(String name) {
-        super(name, false);
+    public StaticState(String name, String id) {
+        super(name, false, id == null ? UUID.randomUUID().toString() : id);
     }
 
     @Override

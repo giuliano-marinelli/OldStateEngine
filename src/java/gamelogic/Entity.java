@@ -2,6 +2,7 @@ package gamelogic;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.UUID;
 import org.json.simple.JSONObject;
 
 public class Entity extends State {
@@ -9,8 +10,9 @@ public class Entity extends State {
     protected int x;
     protected int y;
 
-    public Entity(int x, int y, String name, boolean destroy) {
-        super(name, destroy);
+    public Entity(int x, int y,
+            String name, boolean destroy, String id) {
+        super(name, destroy, id == null ? UUID.randomUUID().toString() : id);
         this.x = x;
         this.y = y;
     }
@@ -39,7 +41,7 @@ public class Entity extends State {
     @Override
     public State next(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, Action> actions) {
         hasChanged = false;
-        Entity newEntity = new Entity(x, y, name, destroy);
+        Entity newEntity = new Entity(x, y, name, destroy, id);
         return newEntity;
     }
 
@@ -52,7 +54,7 @@ public class Entity extends State {
 
     @Override
     protected Object clone() {
-        Entity clon = new Entity(x, y, name, destroy);
+        Entity clon = new Entity(x, y, name, destroy, id);
         return clon;
     }
 
@@ -65,6 +67,13 @@ public class Entity extends State {
         jsonAttrs.put("y", y);
         jsonEntity.put("Entity", jsonAttrs);
         return jsonEntity;
+    }
+
+    @Override
+    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, JSONObject lastState) {
+        Player thePlayer = getPlayer(sessionId, states);
+        return (thePlayer != null && Math.abs(thePlayer.getX() - x) < 10 && Math.abs(thePlayer.getY() - y) < 10) ? toJSON()
+                : (lastState != null && !isJSONRemover(lastState) ? toJSONRemover() : null);
     }
 
 }

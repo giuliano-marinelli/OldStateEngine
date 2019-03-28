@@ -1,5 +1,7 @@
 package gamelogic;
 
+import java.util.LinkedList;
+import java.util.UUID;
 import org.json.simple.JSONObject;
 
 public class Spawn extends StaticState {
@@ -7,8 +9,8 @@ public class Spawn extends StaticState {
     protected int x;
     protected int y;
 
-    public Spawn(int x, int y, String name) {
-        super(name);
+    public Spawn(int x, int y, String name, String id) {
+        super(name, id == null ? UUID.randomUUID().toString() : id);
         this.x = x;
         this.y = y;
     }

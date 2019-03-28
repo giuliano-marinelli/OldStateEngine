@@ -3,19 +3,22 @@ package gamelogic;
 import java.awt.Point;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.UUID;
 import org.json.simple.JSONObject;
 
 public class Projectile extends Entity {
 
-    protected String id;
+    protected String playerId;
     protected int number;
     protected int team;
     protected int xVelocity;
     protected int yVelocity;
 
-    public Projectile(String id, int number, int team, int xVelocity, int yVelocity, int x, int y, String name, boolean destroy) {
-        super(x, y, name, destroy);
-        this.id = id;
+    public Projectile(String playerId, int number, int team, int xVelocity, int yVelocity,
+            int x, int y,
+            String name, boolean destroy, String id) {
+        super(x, y, name, destroy, id == null ? UUID.randomUUID().toString() : id);
+        this.playerId = playerId;
         this.number = number;
         this.team = team;
         this.xVelocity = xVelocity;
@@ -82,14 +85,14 @@ public class Projectile extends Entity {
                 }
             }
         }
-        Projectile newArrow = new Projectile(id, number, team, xVelocity, yVelocity, newX, newY, name, newDestroy);
+        Projectile newArrow = new Projectile(playerId, number, team, xVelocity, yVelocity, newX, newY, name, newDestroy, id);
         return newArrow;
     }
 
     @Override
     public void setState(State newProjectile) {
         super.setState(newProjectile);
-        id = ((Projectile) newProjectile).id;
+        playerId = ((Projectile) newProjectile).playerId;
         number = ((Projectile) newProjectile).number;
         team = ((Projectile) newProjectile).team;
         xVelocity = ((Projectile) newProjectile).xVelocity;
@@ -98,7 +101,7 @@ public class Projectile extends Entity {
 
     @Override
     protected Object clone() {
-        Projectile clon = new Projectile(id, number, team, xVelocity, yVelocity, x, y, name, destroy);
+        Projectile clon = new Projectile(playerId, number, team, xVelocity, yVelocity, x, y, name, destroy, id);
         return clon;
     }
 
@@ -107,13 +110,19 @@ public class Projectile extends Entity {
         JSONObject jsonArrow = new JSONObject();
         JSONObject jsonAttrs = new JSONObject();
         jsonAttrs.put("super", super.toJSON());
-        jsonAttrs.put("id", id);
+        jsonAttrs.put("id", playerId);
         jsonAttrs.put("number", number);
         jsonAttrs.put("team", team);
         jsonAttrs.put("xVelocity", x);
         jsonAttrs.put("yVelocity", y);
         jsonArrow.put("Projectile", jsonAttrs);
         return jsonArrow;
+    }
+
+    @Override
+    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, JSONObject lastState) {
+        JSONObject superJSON = super.toJSON(sessionId, states, staticStates, lastState);
+        return superJSON != null && !isJSONRemover(superJSON) ? toJSON() : superJSON;
     }
 
 }

@@ -4,11 +4,12 @@ import java.awt.Point;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.UUID;
 import org.json.simple.JSONObject;
 
 public class Player extends Entity {
 
-    protected String id;
+    protected String playerId;
     protected int countProjectile;
     protected boolean dead;
     protected boolean leave;
@@ -17,9 +18,11 @@ public class Player extends Entity {
     protected int health;
     protected int healthMax;
 
-    public Player(String id, int countProjectile, boolean dead, boolean leave, int team, int role, int health, int healthMax, int x, int y, String name, boolean destroy) {
-        super(x, y, name, destroy);
-        this.id = id;
+    public Player(String playerId, int countProjectile, boolean dead, boolean leave, int team, int role, int health, int healthMax,
+            int x, int y,
+            String name, boolean destroy, String id) {
+        super(x, y, name, destroy, id == null ? UUID.randomUUID().toString() : id);
+        this.playerId = playerId;
         this.countProjectile = countProjectile;
         this.dead = dead;
         this.leave = leave;
@@ -31,7 +34,7 @@ public class Player extends Entity {
 
     @Override
     public LinkedList<State> generate(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, Action> actions) {
-        Action action = actions.get(id);
+        Action action = actions.get(playerId);
         LinkedList<State> newStates = new LinkedList<>();
         if (action != null) {
             if (!dead) {
@@ -56,7 +59,7 @@ public class Player extends Entity {
                             } else {
                                 yVelocity = 0;
                             }
-                            Projectile projectile = new Projectile(id, countProjectile, team, xVelocity, yVelocity, x, y, "Projectile", false);
+                            Projectile projectile = new Projectile(playerId, countProjectile, team, xVelocity, yVelocity, x, y, "Projectile", false, null);
                             newStates.add(projectile);
                         }
                         break;
@@ -90,7 +93,7 @@ public class Player extends Entity {
     @Override
     public State next(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, Action> actions) {
         hasChanged = false;
-        Action action = actions.get(id);
+        Action action = actions.get(playerId);
         int newX = x;
         int newY = y;
         int newCountProjectile = countProjectile;
@@ -160,8 +163,8 @@ public class Player extends Entity {
                         newHealth = health - 10;
                         if (newHealth <= 0) {
                             newDead = true;
+                            System.out.println("Player " + playerId + " has been killed.");
                         }
-                        System.out.println("Player " + id + " has been killed.");
                         break;
                     case "collide":
                         if (!wasRespanwn) {
@@ -170,11 +173,11 @@ public class Player extends Entity {
                         }
                         break;
                     case "spawn":
-                        System.out.println("Player " + id + " spawn in game.");
+                        System.out.println("Player " + playerId + " spawn in game.");
                         break;
                     case "respawn":
                         wasRespanwn = true;
-                        System.out.println("Player " + id + " respawn in game.");
+                        System.out.println("Player " + playerId + " respawn in game.");
                         Random random = new Random();
                         LinkedList<Spawn> spawns = new LinkedList<>();
                         if (role == 0) {
@@ -198,18 +201,18 @@ public class Player extends Entity {
                         break;
                     case "despawn":
                         newDestroy = true;
-                        System.out.println("Player " + id + " despawn of the game.");
+                        System.out.println("Player " + playerId + " despawn of the game.");
                         break;
                 }
             }
         }
-        Player newPlayer = new Player(id, newCountProjectile, newDead, newLeave, team, newRole, newHealth, healthMax, newX, newY, name, newDestroy);
+        Player newPlayer = new Player(playerId, newCountProjectile, newDead, newLeave, team, newRole, newHealth, healthMax, newX, newY, name, newDestroy, id);
         return newPlayer;
     }
 
     public Point futurePosition(HashMap<String, Action> actions) {
         Point position;
-        Action action = actions.get(id);
+        Action action = actions.get(playerId);
         int newY = y;
         int newX = x;
         if (action != null) {
@@ -251,7 +254,7 @@ public class Player extends Entity {
     @Override
     public void setState(State newPlayer) {
         super.setState(newPlayer);
-        id = ((Player) newPlayer).id;
+        playerId = ((Player) newPlayer).playerId;
         countProjectile = ((Player) newPlayer).countProjectile;
         dead = ((Player) newPlayer).dead;
         leave = ((Player) newPlayer).leave;
@@ -263,7 +266,7 @@ public class Player extends Entity {
 
     @Override
     protected Object clone() {
-        Player clon = new Player(id, countProjectile, dead, leave, team, role, health, healthMax, x, y, name, destroy);
+        Player clon = new Player(playerId, countProjectile, dead, leave, team, role, health, healthMax, x, y, name, destroy, id);
         return clon;
     }
 
@@ -272,7 +275,7 @@ public class Player extends Entity {
         JSONObject jsonPlayer = new JSONObject();
         JSONObject jsonAttrs = new JSONObject();
         jsonAttrs.put("super", super.toJSON());
-        jsonAttrs.put("id", id);
+        jsonAttrs.put("id", playerId);
         jsonAttrs.put("countProjectile", countProjectile);
         jsonAttrs.put("dead", dead);
         jsonAttrs.put("leave", leave);
@@ -282,6 +285,12 @@ public class Player extends Entity {
         jsonAttrs.put("healthMax", healthMax);
         jsonPlayer.put("Player", jsonAttrs);
         return jsonPlayer;
+    }
+
+    @Override
+    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, JSONObject lastState) {
+        JSONObject superJSON = super.toJSON(sessionId, states, staticStates, lastState);
+        return superJSON != null && !isJSONRemover(superJSON) ? toJSON() : superJSON;
     }
 
 }

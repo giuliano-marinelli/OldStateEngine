@@ -4,11 +4,12 @@ import java.awt.Point;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.UUID;
 import org.json.simple.JSONObject;
 
 public class Tower extends Entity {
 
-    protected String id;
+    protected String towerId;
     protected int countProjectile;
     protected boolean dead;
     protected int team;
@@ -17,9 +18,11 @@ public class Tower extends Entity {
     protected int width;
     protected int height;
 
-    public Tower(String id, int countProjectile, boolean dead, int team, int health, int healthMax, int width, int height, int x, int y, String name, boolean destroy) {
-        super(x, y, name, destroy);
-        this.id = id;
+    public Tower(String towerId, int countProjectile, boolean dead, int team, int health, int healthMax, int width, int height,
+            int x, int y,
+            String name, boolean destroy, String id) {
+        super(x, y, name, destroy, id == null ? UUID.randomUUID().toString() : id);
+        this.towerId = towerId;
         this.countProjectile = countProjectile;
         this.dead = dead;
         this.team = team;
@@ -104,7 +107,7 @@ public class Tower extends Entity {
                         yVelocity = random.nextInt(3) - 1;
                     } while (xVelocity == 0 && yVelocity == 0);
                 }
-                Projectile projectile = new Projectile(id, countProjectile, team, xVelocity, yVelocity, x, y, "Projectile", false);
+                Projectile projectile = new Projectile(towerId, countProjectile, team, xVelocity, yVelocity, x, y, "Projectile", false, null);
                 newStates.add(projectile);
                 this.addEvent("fire");
             }
@@ -128,31 +131,31 @@ public class Tower extends Entity {
                         newHealth = health - 10;
                         if (newHealth <= 0) {
                             newDead = true;
+                            System.out.println("Tower " + towerId + " has been killed.");
                         }
-                        System.out.println("Tower " + id + " has been killed.");
                         break;
                     case "fire":
                         newCountProjectile = countProjectile + 1;
                         //System.out.println("Tower " + id + " fired a projectile.");
                         break;
                     case "spawn":
-                        System.out.println("Tower " + id + " spawn in game.");
+                        System.out.println("Tower " + towerId + " spawn in game.");
                         break;
                     case "despawn":
                         newDestroy = true;
-                        System.out.println("Tower " + id + " despawn of the game.");
+                        System.out.println("Tower " + towerId + " despawn of the game.");
                         break;
                 }
             }
         }
-        Tower newTower = new Tower(id, newCountProjectile, newDead, team, newHealth, healthMax, width, height, x, y, name, newDestroy);
+        Tower newTower = new Tower(towerId, newCountProjectile, newDead, team, newHealth, healthMax, width, height, x, y, name, newDestroy, id);
         return newTower;
     }
 
     @Override
     public void setState(State newTower) {
         super.setState(newTower);
-        id = ((Tower) newTower).id;
+        towerId = ((Tower) newTower).towerId;
         countProjectile = ((Tower) newTower).countProjectile;
         dead = ((Tower) newTower).dead;
         team = ((Tower) newTower).team;
@@ -164,7 +167,7 @@ public class Tower extends Entity {
 
     @Override
     protected Object clone() {
-        Tower clon = new Tower(id, countProjectile, dead, team, health, healthMax, width, height, x, y, name, destroy);
+        Tower clon = new Tower(towerId, countProjectile, dead, team, health, healthMax, width, height, x, y, name, destroy, id);
         return clon;
     }
 
@@ -173,7 +176,7 @@ public class Tower extends Entity {
         JSONObject jsonTower = new JSONObject();
         JSONObject jsonAttrs = new JSONObject();
         jsonAttrs.put("super", super.toJSON());
-        jsonAttrs.put("id", id);
+        jsonAttrs.put("id", towerId);
         jsonAttrs.put("countProjectile", countProjectile);
         jsonAttrs.put("dead", dead);
         jsonAttrs.put("team", team);
@@ -183,6 +186,12 @@ public class Tower extends Entity {
         jsonAttrs.put("height", height);
         jsonTower.put("Tower", jsonAttrs);
         return jsonTower;
+    }
+
+    @Override
+    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, JSONObject lastState) {
+        JSONObject superJSON = super.toJSON(sessionId, states, staticStates, lastState);
+        return superJSON != null && !isJSONRemover(superJSON) ? toJSON() : superJSON;
     }
 
 }

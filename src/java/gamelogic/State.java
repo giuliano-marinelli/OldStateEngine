@@ -2,17 +2,20 @@ package gamelogic;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.UUID;
 import org.json.simple.JSONObject;
 
 public abstract class State {
 
+    protected String id;
     protected String name;
     private LinkedList<State> record;
     private LinkedList<String> events;
     protected boolean hasChanged;
     protected boolean destroy;
 
-    public State(String name, boolean destroy) {
+    public State(String name, boolean destroy, String id) {
+        this.id = id == null ? UUID.randomUUID().toString() : id;
         this.name = name;
         this.record = new LinkedList<>();
         this.events = new LinkedList<>();
@@ -48,6 +51,14 @@ public abstract class State {
         this.setState(newState);
     }
 
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public String getName() {
         return name;
     }
@@ -61,6 +72,7 @@ public abstract class State {
     }
 
     public void setState(State newState) {
+        id = newState.id;
         name = newState.name;
         destroy = newState.destroy;
     }
@@ -73,14 +85,29 @@ public abstract class State {
     public JSONObject toJSON() {
         JSONObject jsonState = new JSONObject();
         JSONObject jsonAttrs = new JSONObject();
+        jsonAttrs.put("id", id);
         jsonAttrs.put("name", name);
         jsonAttrs.put("destroy", destroy);
         jsonState.put("State", jsonAttrs);
         return jsonState;
     }
-    
-    public JSONObject toJSON(String sessionId) {
-        return toJSON();
+
+    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, JSONObject lastState) {
+        return hasChanged || lastState == null ? toJSON() : null;
+    }
+
+    protected JSONObject toJSONRemover() {
+        JSONObject jsonState = new JSONObject();
+        JSONObject jsonAttrs = new JSONObject();
+        jsonAttrs.put("id", id);
+        jsonState.put("Remove", jsonAttrs);
+        return jsonState;
+    }
+
+    protected boolean isJSONRemover(JSONObject json) {
+        return json.get("Remove") != null
+                && ((JSONObject) json.get("Remove")).get("id") != null
+                && ((JSONObject) json.get("Remove")).get("id").equals(id);
     }
 
     @Override
@@ -99,6 +126,19 @@ public abstract class State {
 
     public void clearEvents() {
         events.clear();
+    }
+
+    protected Player getPlayer(String sessionId, LinkedList<State> states) {
+        Player thePlayer = null;
+        int i = 0;
+        while (thePlayer == null && i < states.size()) {
+            State state = states.get(i);
+            if (state.getName().equals("Player") && ((Player) state).playerId.equals(sessionId)) {
+                thePlayer = (Player) state;
+            }
+            i++;
+        }
+        return thePlayer;
     }
 
 }

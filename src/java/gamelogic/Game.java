@@ -37,14 +37,14 @@ public class Game implements Runnable {
 
     //constructor
     public Game(Lobby lobby) {
-        states = new LinkedList<>();
-        staticStates = new LinkedList<>();
-        actions = new HashMap<>();
-        actionsSended = new ConcurrentHashMap();
-        gameViews = new HashMap<>();
-        gameViewsSended = new ConcurrentHashMap<>();
-        viewsBarrier = new Phaser(1);
-        endGame = false;
+        this.states = new LinkedList<>();
+        this.staticStates = new LinkedList<>();
+        this.actions = new HashMap<>();
+        this.actionsSended = new ConcurrentHashMap();
+        this.gameViews = new HashMap<>();
+        this.gameViewsSended = new ConcurrentHashMap<>();
+        this.viewsBarrier = new Phaser(1);
+        this.endGame = false;
         this.lobby = lobby;
     }
 
@@ -113,7 +113,7 @@ public class Game implements Runnable {
             loadMap(map);
             //match spawnea players cuando todos hicieron ready
             states.add(new Match(1, 2, true, false, false, 0, 4, new LinkedList<String>(),
-                    new LinkedList<String>(), new LinkedList<String>(), new LinkedList<Integer>(), "Match", false));
+                    new LinkedList<String>(), new LinkedList<String>(), new LinkedList<Integer>(), "Match", false, null));
             createSpawns();
         } catch (URISyntaxException ex) {
             Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
@@ -134,7 +134,7 @@ public class Game implements Runnable {
                 }
                 y++;
             }
-            staticStates.add(new gamelogic.Map(cells, x, y, "Map"));
+            staticStates.add(new gamelogic.Map(cells, x, y, "Map", null));
 
         } catch (IOException ex) {
             Logger.getLogger(Game.class
@@ -143,17 +143,17 @@ public class Game implements Runnable {
     }
 
     private void createSpawns() {
-        staticStates.add(new Spawn(16, 35, "SpawnAttack"));
-        staticStates.add(new Spawn(19, 35, "SpawnAttack"));
-        staticStates.add(new Spawn(22, 35, "SpawnAttack"));
-        staticStates.add(new Spawn(25, 35, "SpawnAttack"));
-        staticStates.add(new Spawn(16, 9, "SpawnDefence"));
-        staticStates.add(new Spawn(18, 9, "SpawnDefence"));
-        staticStates.add(new Spawn(20, 9, "SpawnDefence"));
-        staticStates.add(new Spawn(22, 9, "SpawnDefence"));
-        staticStates.add(new Spawn(19, 5, "SpawnTower"));
-        staticStates.add(new Spawn(9, 20, "SpawnTower"));
-        staticStates.add(new Spawn(29, 20, "SpawnTower"));
+        staticStates.add(new Spawn(16, 35, "SpawnAttack", null));
+        staticStates.add(new Spawn(19, 35, "SpawnAttack", null));
+        staticStates.add(new Spawn(22, 35, "SpawnAttack", null));
+        staticStates.add(new Spawn(25, 35, "SpawnAttack", null));
+        staticStates.add(new Spawn(16, 9, "SpawnDefence", null));
+        staticStates.add(new Spawn(18, 9, "SpawnDefence", null));
+        staticStates.add(new Spawn(20, 9, "SpawnDefence", null));
+        staticStates.add(new Spawn(22, 9, "SpawnDefence", null));
+        staticStates.add(new Spawn(19, 5, "SpawnTower", null));
+        staticStates.add(new Spawn(9, 20, "SpawnTower", null));
+        staticStates.add(new Spawn(29, 20, "SpawnTower", null));
     }
 
     private void createStaticState() {
@@ -295,7 +295,7 @@ public class Game implements Runnable {
     }
 
     public String getGameState(String sessionId) {
-        return gameViews.get(sessionId).getGameState();
+        return gameViews.get(sessionId) != null ? gameViews.get(sessionId).getGameState() : "{}";
     }
 
     public String getGameFullState() {

@@ -32,7 +32,7 @@ public class ServerSender implements Runnable {
             while (!lobby.isEndGame() && session.isOpen()) {
                 //envia los estados que cambiaron en cada ciclo del juego
                 String states = lobby.getState(session.getId());
-                if (session.isOpen()) {
+                if (session.isOpen() && states != null) {
                     session.getAsyncRemote().sendText(states);
                     //System.out.println("Send state changes to player " + session.getId());
                 }//String estado = "{\"cell\":{\"x\":1,\"y\":1,\"jugador\":\"" + i + "\"}}";//juego.getEstado();

@@ -92,9 +92,9 @@ input{
 }
 
 .name{
-    z-index: 3;
+    z-index: 4;
     position: relative;
-    top:-15px;
+    top:-25px;
     width:12px;
     left:-2px;
     height:2px;
@@ -109,7 +109,7 @@ input{
 }
 
 .healthbar{
-    z-index: 3;
+    z-index: 4;
     position: relative;
     top:-4px;
     width:12px;
@@ -117,6 +117,19 @@ input{
     height:2px;
     background-color: green;
     border: 1px solid aquamarine;
+    border-radius: 1px;
+    pointer-events: none;
+}
+
+.visibility{
+    z-index: 3;
+    position: relative;
+    top:-208px;
+    width:420px;
+    left:-202px;
+    height:420px;
+    background-color: rgba(0,0,0,0);
+    border: 1px solid black;
     border-radius: 1px;
     pointer-events: none;
 }
@@ -149,7 +162,7 @@ input{
     width: 10px;
     height: 10px;
     position: absolute;
-    background-image: url('images/fireball.png');
+    /*background-image: url('images/fireball.png');*/
     background-repeat: no-repeat;
     background-size: 10px 10px;
     border-radius: 10px;

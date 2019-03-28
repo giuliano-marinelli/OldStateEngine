@@ -2,6 +2,8 @@ package gamelogic;
 
 import java.awt.Point;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.UUID;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -11,8 +13,8 @@ public class Map extends StaticState {
     private int width;
     private int height;
 
-    public Map(HashMap<Point, Integer> cells, int width, int height, String name) {
-        super(name);
+    public Map(HashMap<Point, Integer> cells, int width, int height, String name, String id) {
+        super(name, id == null ? UUID.randomUUID().toString() : id);
         this.cells = cells;
         this.width = width;
         this.height = height;
@@ -59,6 +61,11 @@ public class Map extends StaticState {
         jsonAttrs.put("height", height);
         jsonMap.put("Map", jsonAttrs);
         return jsonMap;
+    }
+
+    @Override
+    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, JSONObject lastState) {
+        return lastState == null ? toJSON() : null;
     }
 
 }
