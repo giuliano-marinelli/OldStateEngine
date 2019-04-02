@@ -150,7 +150,7 @@ window.onload = function () {
                         player.style.display = "block";
                     }
                     if (destroy) {
-                        $("#player" + id).remove();
+                        $("#" + id).remove();
                         playerTeam[id] = "";
                     }
                     //players.innerHTML += game2State[i]["Player"]["id"] + "," + game2State[i]["Player"]["x"] + "," + game2State[i]["Player"]["y"] + "<br>";
@@ -224,7 +224,7 @@ window.onload = function () {
                         //tower.style.marginTop = "45px";
                     }
                     if (destroy) {
-                        $("#tower" + id).remove();
+                        $("#" + id).remove();
                     }
                 } else if (typeof gameState[i]["Spawn"] !== "undefined") {
                     var x = gameState[i]["Spawn"]["x"];
