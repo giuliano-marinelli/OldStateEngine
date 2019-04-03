@@ -26,7 +26,7 @@ public class Projectile extends Entity {
     }
 
     @Override
-    public LinkedList<State> generate(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, Action> actions) {
+    public LinkedList<State> generate(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions) {
         //si golpea a un jugador le quita vida
         //int newX = x + xVelocity;
         //int newY = y + yVelocity;
@@ -63,7 +63,7 @@ public class Projectile extends Entity {
     }
 
     @Override
-    public State next(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, Action> actions) {
+    public State next(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions) {
         hasChanged = true;
         int newX = x + xVelocity;
         int newY = y + yVelocity;
@@ -120,8 +120,8 @@ public class Projectile extends Entity {
     }
 
     @Override
-    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, JSONObject lastState) {
-        JSONObject superJSON = super.toJSON(sessionId, states, staticStates, lastState);
+    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions, JSONObject lastState) {
+        JSONObject superJSON = super.toJSON(sessionId, states, staticStates, actions, lastState);
         return superJSON != null && !isJSONRemover(superJSON) ? toJSON() : superJSON;
     }
 

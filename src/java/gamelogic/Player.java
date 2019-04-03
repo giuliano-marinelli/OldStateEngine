@@ -33,36 +33,42 @@ public class Player extends Entity {
     }
 
     @Override
-    public LinkedList<State> generate(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, Action> actions) {
-        Action action = actions.get(playerId);
+    public LinkedList<State> generate(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions) {
+        LinkedList<Action> actionsList = actions.get(playerId);
         LinkedList<State> newStates = new LinkedList<>();
-        if (action != null) {
-            if (!dead) {
-                switch (action.getName()) {
-                    case "fire":
-                        int posX = Integer.parseInt(action.getParameter("x"));
-                        int posY = Integer.parseInt(action.getParameter("y"));
-                        if (posX != x || posY != y) {
-                            int xVelocity;
-                            int yVelocity;
-                            if (posX < x) {
-                                xVelocity = -1;
-                            } else if (posX > x) {
-                                xVelocity = 1;
-                            } else {
-                                xVelocity = 0;
-                            }
-                            if (posY < y) {
-                                yVelocity = -1;
-                            } else if (posY > y) {
-                                yVelocity = 1;
-                            } else {
-                                yVelocity = 0;
-                            }
-                            Projectile projectile = new Projectile(playerId, countProjectile, team, xVelocity, yVelocity, x, y, "Projectile", false, null);
-                            newStates.add(projectile);
+        if (actionsList != null) {
+            for (Action action : actionsList) {
+                if (action != null) {
+                    if (!dead) {
+                        switch (action.getName()) {
+                            case "fire":
+                                if (action.getParameter("x") != null && action.getParameter("y") != null) {
+                                    int posX = Integer.parseInt(action.getParameter("x"));
+                                    int posY = Integer.parseInt(action.getParameter("y"));
+                                    if (posX != x || posY != y) {
+                                        int xVelocity;
+                                        int yVelocity;
+                                        if (posX < x) {
+                                            xVelocity = -1;
+                                        } else if (posX > x) {
+                                            xVelocity = 1;
+                                        } else {
+                                            xVelocity = 0;
+                                        }
+                                        if (posY < y) {
+                                            yVelocity = -1;
+                                        } else if (posY > y) {
+                                            yVelocity = 1;
+                                        } else {
+                                            yVelocity = 0;
+                                        }
+                                        Projectile projectile = new Projectile(playerId, countProjectile, team, xVelocity, yVelocity, x, y, "Projectile", false, null);
+                                        newStates.add(projectile);
+                                    }
+                                }
+                                break;
                         }
-                        break;
+                    }
                 }
             }
         }
@@ -91,9 +97,9 @@ public class Player extends Entity {
     }
 
     @Override
-    public State next(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, Action> actions) {
+    public State next(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions) {
         hasChanged = false;
-        Action action = actions.get(playerId);
+        LinkedList<Action> actionsList = actions.get(playerId);
         int newX = x;
         int newY = y;
         int newCountProjectile = countProjectile;
@@ -102,55 +108,59 @@ public class Player extends Entity {
         int newRole = role;
         int newHealth = health;
         boolean newDestroy = destroy;
-        if (action != null) {
-            hasChanged = true;
-            //System.out.println("ACTION: " + action.getName());
-            if (!dead) {
-                switch (action.getName()) {
-                    case "up":
-                        newY = y - 1;
-                        break;
-                    case "down":
-                        newY = y + 1;
-                        break;
-                    case "left":
-                        newX = x - 1;
-                        break;
-                    case "right":
-                        newX = x + 1;
-                        break;
-                    case "upleft":
-                        newY = y - 1;
-                        newX = x - 1;
-                        break;
-                    case "upright":
-                        newY = y - 1;
-                        newX = x + 1;
-                        break;
-                    case "downleft":
-                        newY = y + 1;
-                        newX = x - 1;
-                        break;
-                    case "downright":
-                        newY = y + 1;
-                        newX = x + 1;
-                        break;
-                    case "fire":
-                        newCountProjectile = countProjectile + 1;
-                        break;
+        if (actionsList != null) {
+            for (Action action : actionsList) {
+                if (action != null) {
+                    hasChanged = true;
+                    //System.out.println("ACTION: " + action.getName());
+                    if (!dead) {
+                        switch (action.getName()) {
+                            case "up":
+                                newY = y - 1;
+                                break;
+                            case "down":
+                                newY = y + 1;
+                                break;
+                            case "left":
+                                newX = x - 1;
+                                break;
+                            case "right":
+                                newX = x + 1;
+                                break;
+                            /*case "upleft":
+                            newY = y - 1;
+                            newX = x - 1;
+                            break;
+                        case "upright":
+                            newY = y - 1;
+                            newX = x + 1;
+                            break;
+                        case "downleft":
+                            newY = y + 1;
+                            newX = x - 1;
+                            break;
+                        case "downright":
+                            newY = y + 1;
+                            newX = x + 1;
+                            break;*/
+                            case "fire":
+                                newCountProjectile = countProjectile + 1;
+                                break;
+                        }
+                    }
+                    switch (action.getName()) {
+                        case "enter":
+                            newLeave = false;
+                            break;
+                        case "leave":
+                            newLeave = true;
+                            break;
+                    }
+                    if (!((Map) staticStates.get(0)).canWalk(new Point(newX, newY))) {
+                        newX = x;
+                        newY = y;
+                    }
                 }
-            }
-            switch (action.getName()) {
-                case "enter":
-                    newLeave = false;
-                    break;
-                case "leave":
-                    newLeave = true;
-                    break;
-            }
-            if (!((Map) staticStates.get(0)).canWalk(new Point(newX, newY))) {
-                newX = x;
-                newY = y;
             }
         }
         LinkedList<String> events = getEvents();
@@ -210,41 +220,45 @@ public class Player extends Entity {
         return newPlayer;
     }
 
-    public Point futurePosition(HashMap<String, Action> actions) {
+    public Point futurePosition(HashMap<String, LinkedList<Action>> actions) {
         Point position;
-        Action action = actions.get(playerId);
+        LinkedList<Action> actionsList = actions.get(playerId);
         int newY = y;
         int newX = x;
-        if (action != null) {
-            switch (action.getName()) {
-                case "up":
-                    newY = y - 1;
-                    break;
-                case "down":
-                    newY = y + 1;
-                    break;
-                case "left":
-                    newX = x - 1;
-                    break;
-                case "right":
-                    newX = x + 1;
-                    break;
-                case "upleft":
-                    newY = y - 1;
-                    newX = x - 1;
-                    break;
-                case "upright":
-                    newY = y - 1;
-                    newX = x + 1;
-                    break;
-                case "downleft":
-                    newY = y + 1;
-                    newX = x - 1;
-                    break;
-                case "downright":
-                    newY = y + 1;
-                    newX = x + 1;
-                    break;
+        if (actionsList != null) {
+            for (Action action : actionsList) {
+                if (action != null) {
+                    switch (action.getName()) {
+                        case "up":
+                            newY = y - 1;
+                            break;
+                        case "down":
+                            newY = y + 1;
+                            break;
+                        case "left":
+                            newX = x - 1;
+                            break;
+                        case "right":
+                            newX = x + 1;
+                            break;
+                        /*case "upleft":
+                        newY = y - 1;
+                        newX = x - 1;
+                        break;
+                    case "upright":
+                        newY = y - 1;
+                        newX = x + 1;
+                        break;
+                    case "downleft":
+                        newY = y + 1;
+                        newX = x - 1;
+                        break;
+                    case "downright":
+                        newY = y + 1;
+                        newX = x + 1;
+                        break;*/
+                    }
+                }
             }
         }
         position = new Point(newX, newY);
@@ -288,8 +302,8 @@ public class Player extends Entity {
     }
 
     @Override
-    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, JSONObject lastState) {
-        JSONObject superJSON = super.toJSON(sessionId, states, staticStates, lastState);
+    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions, JSONObject lastState) {
+        JSONObject superJSON = super.toJSON(sessionId, states, staticStates, actions, lastState);
         return superJSON != null && !isJSONRemover(superJSON) ? toJSON() : superJSON;
     }
 

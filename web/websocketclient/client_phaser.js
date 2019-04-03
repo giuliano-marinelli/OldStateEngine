@@ -130,6 +130,7 @@ window.onload = function () {
                     playerHealthbar = document.getElementById(id + "-healthbar");
                     playerHealthbar.style.width = health * 24 / healthMax + "px";
                     playerVisibility = document.getElementById(id + "-visibility");
+                    playerVisibility.style.visibility = "hidden";
                     if (dead) {
                         player.style.zIndex = "1";
                         player.style.backgroundImage = "url('images/blood.png')";
@@ -139,9 +140,9 @@ window.onload = function () {
                         player.style.backgroundImage = "url('images/brujo.png')";
                         if (playerId === socketID) {
                             player.style.backgroundColor = "green";
+                            playerVisibility.style.visibility = "visible";
                         } else {
                             player.style.backgroundColor = $(".team" + team).css("color");//"#" + ((1 << 24) * Math.random() | 0).toString(16);
-                            playerVisibility.style.visibility = "hidden";
                         }
                     }
                     if (leave) {
@@ -341,15 +342,15 @@ window.onload = function () {
     }, 100);
 
     function updateKeyboard() {
-        if (Key.areDown([Key.UP, Key.ALTUP]) && Key.areDown([Key.LEFT, Key.ALTLEFT])) {
-            socket.send("upleft");
-        } else if (Key.areDown([Key.UP, Key.ALTUP]) && Key.areDown([Key.RIGHT, Key.ALTRIGHT])) {
-            socket.send("upright");
-        } else if (Key.areDown([Key.DOWN, Key.ALTDOWN]) && Key.areDown([Key.LEFT, Key.ALTLEFT])) {
-            socket.send("downleft");
-        } else if (Key.areDown([Key.DOWN, Key.ALTDOWN]) && Key.areDown([Key.RIGHT, Key.ALTRIGHT])) {
-            socket.send("downright");
-        } else if (Key.areDown([Key.UP, Key.ALTUP])) {
+        /*if (Key.areDown([Key.UP, Key.ALTUP]) && Key.areDown([Key.LEFT, Key.ALTLEFT])) {
+         socket.send("upleft");
+         } else if (Key.areDown([Key.UP, Key.ALTUP]) && Key.areDown([Key.RIGHT, Key.ALTRIGHT])) {
+         socket.send("upright");
+         } else if (Key.areDown([Key.DOWN, Key.ALTDOWN]) && Key.areDown([Key.LEFT, Key.ALTLEFT])) {
+         socket.send("downleft");
+         } else if (Key.areDown([Key.DOWN, Key.ALTDOWN]) && Key.areDown([Key.RIGHT, Key.ALTRIGHT])) {
+         socket.send("downright");
+         } else */if (Key.areDown([Key.UP, Key.ALTUP])) {
             socket.send("up");
         } else if (Key.areDown([Key.LEFT, Key.ALTLEFT])) {
             socket.send("left");

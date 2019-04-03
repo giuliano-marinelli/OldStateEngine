@@ -64,7 +64,7 @@ public class Map extends StaticState {
     }
 
     @Override
-    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, JSONObject lastState) {
+    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions, JSONObject lastState) {
         return lastState == null ? toJSON() : null;
     }
 

@@ -2,11 +2,7 @@ package gamelogic;
 
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Phaser;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.json.simple.JSONObject;
 
 public class GameView implements Runnable {
@@ -15,12 +11,13 @@ public class GameView implements Runnable {
     private String gameState;
     private LinkedList<State> states;
     private LinkedList<StaticState> staticStates;
+    private HashMap<String, LinkedList<Action>> actions;
     private HashMap<State, JSONObject> statesSended;
     private HashMap<State, JSONObject> staticStatesSended;
     private Phaser viewsBarrier;
     private boolean playerExit = false;
 
-    GameView(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, Phaser viewsBarrier) {
+    GameView(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions, Phaser viewsBarrier) {
         this.sessionId = sessionId;
         this.states = states;
         this.staticStates = staticStates;
@@ -28,6 +25,7 @@ public class GameView implements Runnable {
         this.staticStatesSended = new HashMap<>();
         this.viewsBarrier = viewsBarrier;
         this.playerExit = false;
+        this.actions = actions;
     }
 
     @Override
@@ -47,7 +45,7 @@ public class GameView implements Runnable {
         int i = 0;
         for (StaticState staticState : staticStates) {
             //generar el estado estatico para la visibilidad del jugador
-            jsonState = staticState.toJSON(sessionId, states, staticStates, staticStatesSended.get(staticState));
+            jsonState = staticState.toJSON(sessionId, states, staticStates, actions, staticStatesSended.get(staticState));
             if (jsonState != null) {
                 staticStatesSended.put(staticState, jsonState);
                 jsonStates.put(i + "", jsonState);
@@ -56,7 +54,7 @@ public class GameView implements Runnable {
         }
         for (State state : states) {
             //generar el estado para la visibilidad del jugador
-            jsonState = state.toJSON(sessionId, states, staticStates, statesSended.get(state));
+            jsonState = state.toJSON(sessionId, states, staticStates, actions, statesSended.get(state));
             if (jsonState != null) {
                 statesSended.put(state, jsonState);
                 jsonStates.put(i + "", jsonState);

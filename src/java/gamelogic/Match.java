@@ -7,6 +7,7 @@ import java.util.Random;
 import java.util.UUID;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import java.util.Map;
 
 public class Match extends State {
 
@@ -153,7 +154,7 @@ public class Match extends State {
     }
 
     @Override
-    public LinkedList<State> generate(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, Action> actions) {
+    public LinkedList<State> generate(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions) {
         LinkedList<State> newStates = new LinkedList<>();
         if ((allReady() || teamsReady()) && !startGame) {
             reset(states);
@@ -202,21 +203,23 @@ public class Match extends State {
                 addEvent("end");
             }
         }
-        for (java.util.Map.Entry<String, Action> actionEntry : actions.entrySet()) {
+        for (Map.Entry<String, LinkedList<Action>> actionEntry : actions.entrySet()) {
             String id = actionEntry.getKey();
-            Action action = actionEntry.getValue();
-            hasChanged = true;
-            switch (action.getName()) {
-                case "restart":
-                    reset(states);
-                    addEvent("end");
+            LinkedList<Action> actionsList = actionEntry.getValue();
+            for (Action action : actionsList) {
+                hasChanged = true;
+                switch (action.getName()) {
+                    case "restart":
+                        reset(states);
+                        addEvent("end");
+                }
             }
         }
         return newStates;
     }
 
     @Override
-    public State next(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, Action> actions) {
+    public State next(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions) {
         hasChanged = false;
         int newRound = round;
         boolean newStartGame = startGame;
@@ -227,29 +230,31 @@ public class Match extends State {
         LinkedList<String> newPlayingPlayers = (LinkedList<String>) playingPlayers.clone();
         LinkedList<String> newReady = (LinkedList<String>) ready.clone();
         LinkedList<Integer> newTeamPoints = (LinkedList<Integer>) teamPoints.clone();
-        for (java.util.Map.Entry<String, Action> actionEntry : actions.entrySet()) {
+        for (Map.Entry<String, LinkedList<Action>> actionEntry : actions.entrySet()) {
             String id = actionEntry.getKey();
-            Action action = actionEntry.getValue();
-            hasChanged = true;
-            switch (action.getName()) {
-                case "enter":
-                    newPlayers.add(id);
-                    break;
-                case "ready":
-                    if (!ready.contains(id) && !startGame) {
-                        newReady.add(id);
-                    }
-                    break;
-                case "leave":
-                    newPlayers.remove(id);
-                    newPlayingPlayers.remove(id);
-                    newReady.remove(id);
-                    break;
-                case "restart":
-                    newPlayers.clear();
-                    newPlayingPlayers.clear();
-                    newReady.clear();
-                    break;
+            LinkedList<Action> actionsList = actionEntry.getValue();
+            for (Action action : actionsList) {
+                hasChanged = true;
+                switch (action.getName()) {
+                    case "enter":
+                        newPlayers.add(id);
+                        break;
+                    case "ready":
+                        if (!ready.contains(id) && !startGame) {
+                            newReady.add(id);
+                        }
+                        break;
+                    case "leave":
+                        newPlayers.remove(id);
+                        newPlayingPlayers.remove(id);
+                        newReady.remove(id);
+                        break;
+                    case "restart":
+                        newPlayers.clear();
+                        newPlayingPlayers.clear();
+                        newReady.clear();
+                        break;
+                }
             }
         }
         LinkedList<String> events = getEvents();

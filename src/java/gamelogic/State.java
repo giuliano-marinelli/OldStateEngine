@@ -35,12 +35,12 @@ public abstract class State {
         return hasChanged;
     }
 
-    public LinkedList<State> generate(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, Action> actions) {
+    public LinkedList<State> generate(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions) {
         //TODO in concrete class
         return null;
     }
 
-    public State next(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, Action> actions) {
+    public State next(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions) {
         //TODO in concrete class
         hasChanged = false;
         return this;
@@ -92,7 +92,7 @@ public abstract class State {
         return jsonState;
     }
 
-    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, JSONObject lastState) {
+    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions, JSONObject lastState) {
         return lastState == null || hasChanged ? toJSON() : null;
     }
 

@@ -74,7 +74,7 @@ public class Tower extends Entity {
     }
 
     @Override
-    public LinkedList<State> generate(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, Action> actions) {
+    public LinkedList<State> generate(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions) {
         LinkedList<State> newStates = new LinkedList<>();
         if (!dead) {
             Random random = new Random();
@@ -116,7 +116,7 @@ public class Tower extends Entity {
     }
 
     @Override
-    public State next(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, Action> actions) {
+    public State next(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions) {
         hasChanged = false;
         int newCountProjectile = countProjectile;
         boolean newDead = dead;
@@ -189,8 +189,8 @@ public class Tower extends Entity {
     }
 
     @Override
-    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, JSONObject lastState) {
-        JSONObject superJSON = super.toJSON(sessionId, states, staticStates, lastState);
+    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions, JSONObject lastState) {
+        JSONObject superJSON = super.toJSON(sessionId, states, staticStates, actions, lastState);
         return superJSON != null && !isJSONRemover(superJSON) ? toJSON() : superJSON;
     }
 

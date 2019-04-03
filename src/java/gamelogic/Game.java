@@ -9,22 +9,21 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Phaser;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 public class Game implements Runnable {
 
     private LinkedList<State> states;
     private LinkedList<StaticState> staticStates;
-    private HashMap<String, Action> actions;
-    private ConcurrentHashMap<String, String> actionsSended; //sessionid -> accion
+    private HashMap<String, LinkedList<Action>> actions;
+    private ConcurrentHashMap<String, HashMap<String, JSONObject>> actionsSended; //sessionid -> (actionName, actionJSON)
     private HashMap<String, GameView> gameViews;
     private ConcurrentHashMap<String, String> gameViewsSended; //sessionid -> [enter, leave]
     private Phaser viewsBarrier;
@@ -185,64 +184,69 @@ public class Game implements Runnable {
 
     public void readActions() {
         actions.clear();
-        JSONParser parser = new JSONParser();
-        for (Map.Entry<String, String> actionSend : actionsSended.entrySet()) {
-            String sessionId = actionSend.getKey();
-            String action = actionSend.getValue();
-            Action newAction = null;
-            try {
-                JSONObject jsonAction = (JSONObject) parser.parse(action);
-                String actionName = (String) jsonAction.get("name");
-                newAction = new Action(sessionId, actionName);
+        for (Map.Entry<String, HashMap<String, JSONObject>> actionsSend : actionsSended.entrySet()) {
+            String sessionId = actionsSend.getKey();
+            HashMap<String, JSONObject> newActions = actionsSend.getValue();
+            LinkedList<Action> newActionsList = new LinkedList<>();
+            //esta lista es solo con proposito de testeo. Para imprimir los nombres de las acciones realizadas
+            LinkedList<String> newActionsNameList = new LinkedList<>();
+            for (Map.Entry<String, JSONObject> newAction : newActions.entrySet()) {
+                String newActionName = newAction.getKey();
+                JSONObject newActionJSON = newAction.getValue();
+                Action newActionObject = null;
+                try {
+                    newActionObject = new Action(sessionId, newActionName);
 
-                JSONArray jsonParameters = (JSONArray) jsonAction.get("parameters");
-                if (jsonParameters != null) {
-                    for (int i = 0; i < jsonParameters.size(); i++) {
-                        JSONObject parameter = (JSONObject) jsonParameters.get(i);
-                        newAction.putParameter((String) parameter.get("name"), (String) parameter.get("value"));
+                    JSONArray jsonParameters = (JSONArray) newActionJSON.get("parameters");
+                    if (jsonParameters != null) {
+                        for (int i = 0; i < jsonParameters.size(); i++) {
+                            JSONObject parameter = (JSONObject) jsonParameters.get(i);
+                            newActionObject.putParameter((String) parameter.get("name"), (String) parameter.get("value"));
+                        }
                     }
+                } catch (Exception ex) {
+                    newActionObject = new Action(sessionId, newActionName);
+                } finally {
+                    newActionsList.add(newActionObject);
+                    newActionsNameList.add(newActionName);
                 }
-            } catch (Exception ex) {
-                newAction = new Action(sessionId, action);
-            } finally {
-                System.out.println("Player " + sessionId + " do action: " + newAction.getName());
-                actions.put(sessionId, newAction);
-                actionsSended.remove(sessionId);
             }
+            System.out.println("Player " + sessionId + " do actions: " + newActionsNameList.toString());
+            actions.put(sessionId, newActionsList);
+            actionsSended.remove(sessionId);
         }
     }
 
     public void addAction(String sessionId, String action) {
-        //Player player = players.get(sessionId);
-        //if (players.containsKey(sessionId)) {
-        //    if (!player.isLeave()) {
-        //si existe el player y no salio ni murio, entonces puede hacer accion
-
-        if (actionsSended.containsKey(sessionId)) {
-            String actualAction = actionsSended.get(sessionId);
-            JSONParser parser = new JSONParser();
-            int actualPriority = 0;
-            try {
-                JSONObject jsonAction = (JSONObject) parser.parse(actualAction);
-                actualPriority = Integer.parseInt((String) jsonAction.get("priority"));
-            } catch (Exception ex) {
-                actualPriority = 0;
-            }
-            int newPriority = 0;
-            try {
-                JSONObject jsonAction = (JSONObject) parser.parse(action);
-                newPriority = Integer.parseInt((String) jsonAction.get("priority"));
-            } catch (Exception ex) {
-                newPriority = 0;
-            }
-            if (newPriority > actualPriority) {
-                actionsSended.put(sessionId, action);
-            }
-        } else {
-            actionsSended.put(sessionId, action);
+        JSONParser parser = new JSONParser();
+        JSONObject newAction;
+        try {
+            newAction = (JSONObject) parser.parse(action);
+        } catch (ParseException ex) {
+            newAction = new JSONObject();
+            newAction.put("name", action);
         }
-        //    }
-        //}
+        String newActionName = newAction.get("name") != null ? (String) newAction.get("name") : null;
+        int newPriority = newAction.get("priority") != null ? Integer.parseInt((String) newAction.get("priority")) : 0;
+        if (newActionName != null) {
+            if (actionsSended.containsKey(sessionId)) {
+                JSONObject actualAction = actionsSended.get(sessionId).get(newActionName);
+                if (actualAction != null) {
+                    int actualPriority = actualAction.get("priority") != null ? Integer.parseInt((String) actualAction.get("priority")) : 0;;
+
+                    if (newPriority > actualPriority) {
+                        actionsSended.get(sessionId).put(newActionName, newAction);
+                    }
+                } else {
+                    actionsSended.get(sessionId).put(newActionName, newAction);
+                }
+            } else {
+                HashMap<String, JSONObject> newActions = new HashMap<>();
+                newActions.put(newActionName, newAction);
+                actionsSended.put(sessionId, newActions);
+            }
+        }
+
     }
 
     public void readPlayers() {
@@ -255,7 +259,7 @@ public class Game implements Runnable {
                     //(tal ves hay que hacerlo en el hilo del gameView)
                     viewsBarrier.register();
                     //creo el nuevo hilo
-                    GameView gameView = new GameView(sessionId, states, staticStates, viewsBarrier);
+                    GameView gameView = new GameView(sessionId, states, staticStates, actions, viewsBarrier);
                     Thread threadGameView = new Thread(gameView);
                     threadGameView.start();
                     //lo agrego a la lista de gridViews

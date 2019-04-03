@@ -34,12 +34,12 @@ public class Entity extends State {
     }
 
     @Override
-    public LinkedList<State> generate(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, Action> actions) {
+    public LinkedList<State> generate(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions) {
         return null;
     }
 
     @Override
-    public State next(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, Action> actions) {
+    public State next(LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions) {
         hasChanged = false;
         Entity newEntity = new Entity(x, y, name, destroy, id);
         return newEntity;
@@ -70,7 +70,7 @@ public class Entity extends State {
     }
 
     @Override
-    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, JSONObject lastState) {
+    public JSONObject toJSON(String sessionId, LinkedList<State> states, LinkedList<StaticState> staticStates, HashMap<String, LinkedList<Action>> actions, JSONObject lastState) {
         Player thePlayer = getPlayer(sessionId, states);
         return (thePlayer != null && Math.abs(thePlayer.getX() - x) < 10 && Math.abs(thePlayer.getY() - y) < 10)
                 ? (lastState == null || hasChanged || isJSONRemover(lastState) ? toJSON() : null)
