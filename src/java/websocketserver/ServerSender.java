@@ -3,7 +3,7 @@ package websocketserver;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.websocket.Session;
-import gamelogic.Lobby;
+import engine.Lobby;
 
 public class ServerSender implements Runnable {
 

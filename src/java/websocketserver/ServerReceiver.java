@@ -1,6 +1,6 @@
 package websocketserver;
 
-import gamelogic.Lobby;
+import engine.Lobby;
 import javax.enterprise.context.ApplicationScoped;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;

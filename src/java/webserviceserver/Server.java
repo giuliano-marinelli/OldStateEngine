@@ -1,6 +1,6 @@
 package webserviceserver;
 
-import gamelogic.State;
+import engine.State;
 import javax.jws.WebMethod;
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;

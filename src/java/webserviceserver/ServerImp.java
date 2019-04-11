@@ -5,7 +5,7 @@
  */
 package webserviceserver;
 
-import gamelogic.Lobby;
+import engine.Lobby;
 import java.security.SecureRandom;
 import java.util.UUID;
 import java.util.logging.Level;
